@@ -3,21 +3,21 @@
 // the WPILib BSD license file in the root directory of this project.
 
 package frc.robot;
-
-import com.ctre.phoenix.motorcontrol.Faults;
-import com.ctre.phoenix.motorcontrol.InvertType;
-import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
+//ctre
+import com.ctre.phoenix.motorcontrol.Faults; //debugger
+import com.ctre.phoenix.motorcontrol.InvertType; //inverted
+import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX; //motorcontroller
 
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.Joystick; //controller or joystick
 
 public class Robot extends TimedRobot {
-  WPI_VictorSPX _rghtFront = new WPI_VictorSPX(1);
+  WPI_VictorSPX _rightFront = new WPI_VictorSPX(1);
   WPI_VictorSPX _rghtFollower = new WPI_VictorSPX(2);
   WPI_VictorSPX _leftFront = new WPI_VictorSPX(3);  
   WPI_VictorSPX _leftFollower = new WPI_VictorSPX(4); 
-  DifferentialDrive _diffDrive = new DifferentialDrive(_leftFront, _rghtFront);
+  DifferentialDrive _diffDrive = new DifferentialDrive(_leftFront, _rightFront);
 
   Joystick _joystick = new Joystick(0);
 
@@ -31,8 +31,8 @@ public class Robot extends TimedRobot {
 
         /* get gamepad stick values */
         //multiples the y value (raw axis) of the L-stick of the joystick by -1 to get a final result
-        double forw = +1 * _joystick.getRawAxis(1); /* positive is forward */ //original value is -1 //changed from -1
-        double turn = -1 * _joystick.getRawAxis(0); /* positive is right */ //original value is +1 //changed from +1
+        double turn = +1 * _joystick.getRawAxis(0); /* positive is right */ //original value is +1  
+        double forw = -1 * _joystick.getRawAxis(1); /* positive is forward */ //original value is -1 
         boolean btn1 = _joystick.getRawButton(1); /* is button is down, print joystick values */
 
         /* deadband gamepad 10% */
@@ -56,7 +56,7 @@ public class Robot extends TimedRobot {
         // double leftPos = _leftFront.GetSelectedSensorPosition(0);
         // double rghtPos = _rghtFront.GetSelectedSensorPosition(0);
         double leftVelUnitsPer100ms = _leftFront.getSelectedSensorVelocity(0);
-        double rghtVelUnitsPer100ms = _rghtFront.getSelectedSensorVelocity(0);
+        double rghtVelUnitsPer100ms = _rightFront.getSelectedSensorVelocity(0);
 
         work += " L:" + leftVelUnitsPer100ms + " R:" + rghtVelUnitsPer100ms;
 
@@ -65,7 +65,7 @@ public class Robot extends TimedRobot {
          */
         // *faults are for debugging, checking problems
         _leftFront.getFaults(_faults_L); // *use this implementation
-        _rghtFront.getFaults(_faults_R); // *use this implementation
+        _rightFront.getFaults(_faults_R); // *use this implementation
 
         if (_faults_L.SensorOutOfPhase) { // *use this implementation
             work += " L sensor is out of phase";
@@ -84,17 +84,17 @@ public class Robot extends TimedRobot {
     @Override
     public void robotInit() {
         /* factory default values */
-        _rghtFront.configFactoryDefault();
+        _rightFront.configFactoryDefault();
         _rghtFollower.configFactoryDefault();
         _leftFront.configFactoryDefault();
         _leftFollower.configFactoryDefault();
 
         /* set up followers */
-        _rghtFollower.follow(_rghtFront);
+        _rghtFollower.follow(_rightFront);
         _leftFollower.follow(_leftFront);
 
         /* [3] flip values so robot moves forward when stick-forward/LEDs-green */
-        _rghtFront.setInverted(true); // !< Update this
+        _rightFront.setInverted(true); // !< Update this
         _leftFront.setInverted(false); // !< Update this
 
         /*
@@ -106,7 +106,7 @@ public class Robot extends TimedRobot {
         /*
          * [4] adjust sensor phase so sensor moves positive when Talon LEDs are green
          */
-        _rghtFront.setSensorPhase(true);
+        _rightFront.setSensorPhase(true);
         _leftFront.setSensorPhase(true);
     }
 }
