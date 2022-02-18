@@ -13,11 +13,11 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.Joystick; //controller or joystick
 
 public class Robot extends TimedRobot {
-  WPI_VictorSPX _rightFront = new WPI_VictorSPX(1);
-  WPI_VictorSPX _rghtFollower = new WPI_VictorSPX(2);
-  WPI_VictorSPX _leftFront = new WPI_VictorSPX(3);  
-  WPI_VictorSPX _leftFollower = new WPI_VictorSPX(4); 
-  DifferentialDrive _diffDrive = new DifferentialDrive(_leftFront, _rightFront);
+  WPI_VictorSPX _rightBack = new WPI_VictorSPX(1);
+  WPI_VictorSPX _rightFront = new WPI_VictorSPX(2);
+  WPI_VictorSPX _leftBack = new WPI_VictorSPX(3);  
+  WPI_VictorSPX _leftFront = new WPI_VictorSPX(4); 
+  DifferentialDrive _diffDrive = new DifferentialDrive(_leftBack, _rightBack);
 
   Joystick _joystick = new Joystick(0);
 
@@ -55,17 +55,17 @@ public class Robot extends TimedRobot {
         /* get sensor values */
         // double leftPos = _leftFront.GetSelectedSensorPosition(0);
         // double rghtPos = _rghtFront.GetSelectedSensorPosition(0);
-        double leftVelUnitsPer100ms = _leftFront.getSelectedSensorVelocity(0);
-        double rghtVelUnitsPer100ms = _rightFront.getSelectedSensorVelocity(0);
+        double leftVelUnitsPer100ms = _leftBack.getSelectedSensorVelocity(0);
+        double rightVelUnitsPer100ms = _rightBack.getSelectedSensorVelocity(0);
 
-        work += " L:" + leftVelUnitsPer100ms + " R:" + rghtVelUnitsPer100ms;
+        work += " L:" + leftVelUnitsPer100ms + " R:" + rightVelUnitsPer100ms;
 
         /*
          * drive motor at least 25%, Talons will auto-detect if sensor is out of phase
          */
         // *faults are for debugging, checking problems
-        _leftFront.getFaults(_faults_L); // *use this implementation
-        _rightFront.getFaults(_faults_R); // *use this implementation
+        _leftBack.getFaults(_faults_L); // *use this implementation
+        _rightBack.getFaults(_faults_R); // *use this implementation
 
         if (_faults_L.SensorOutOfPhase) { // *use this implementation
             work += " L sensor is out of phase";
@@ -84,29 +84,29 @@ public class Robot extends TimedRobot {
     @Override
     public void robotInit() {
         /* factory default values */
+        _rightBack.configFactoryDefault();
         _rightFront.configFactoryDefault();
-        _rghtFollower.configFactoryDefault();
+        _leftBack.configFactoryDefault();
         _leftFront.configFactoryDefault();
-        _leftFollower.configFactoryDefault();
 
         /* set up followers */
-        _rghtFollower.follow(_rightFront);
-        _leftFollower.follow(_leftFront);
+        _rightFront.follow(_rightBack);
+        _leftFront.follow(_leftBack);
 
         /* [3] flip values so robot moves forward when stick-forward/LEDs-green */
-        _rightFront.setInverted(true); // !< Update this
-        _leftFront.setInverted(false); // !< Update this
+        _rightBack.setInverted(true); // !< Update this
+        _leftBack.setInverted(false); // !< Update this
 
         /*
          * set the invert of the followers to match their respective master controllers
          */
-        _rghtFollower.setInverted(InvertType.FollowMaster);
-        _leftFollower.setInverted(InvertType.FollowMaster);
+        _rightFront.setInverted(InvertType.FollowMaster);
+        _leftFront.setInverted(InvertType.FollowMaster);
 
         /*
          * [4] adjust sensor phase so sensor moves positive when Talon LEDs are green
          */
-        _rightFront.setSensorPhase(true);
-        _leftFront.setSensorPhase(true);
+        _rightBack.setSensorPhase(true);
+        _leftBack.setSensorPhase(true);
     }
 }
