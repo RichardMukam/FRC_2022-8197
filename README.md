@@ -1,0 +1,2 @@
+# FRC_2022-8197
+👋 Hi, welcome to Air Tigers Robotics ©. These are project files for the myriad projects that Air Tigers #8197 are working on, a majority being files for our 2022 Rapid React FRC Robot. Feel free to suggest any additions, or make any pull requests within the "experiments" branch - we'd be glad to analyze your additions and suggestions and implement them to our projects! Thank you! 👍
