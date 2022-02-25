@@ -14,6 +14,8 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.Joystick; //general controller import
 import edu.wpi.first.wpilibj.PS4Controller;
+import edu.wpi.first.wpilibj.Ultrasonic;
+import edu.wpi.first.wpilibj.Timer;
 
 public class Robot extends TimedRobot {
     // right side
@@ -27,6 +29,12 @@ public class Robot extends TimedRobot {
     // set up for differential drive
     DifferentialDrive _diffDrive = new DifferentialDrive(_driveLeft, _driveRight); //this was originally driveRight,driveLeft, but should've been driveLeft,driveRight
 
+    //sensors
+    Ultrasonic _Ultrasonic = new Ultrasonic(1,1);
+
+    //timer (for autonomous)
+    Timer time = new Timer();
+
     // controllers
     Joystick _joystick = new Joystick(0);
     PS4Controller ps4 = new PS4Controller(0);
@@ -34,11 +42,32 @@ public class Robot extends TimedRobot {
     // debug
     Faults _faults_L = new Faults();
     Faults _faults_R = new Faults();
+    
+    
+    @Override
+    public void autonomousPeriodic()
+    {
+        if (time.get() < 5.0)
+        {
+            
+        }
 
+        /*
+        if(_Ultrasonic.getRangeInches() > 12) {
+           // The manuever the robot should do
+           _diffDrive.tankDrive(.5, .5);
+           // *.5 stands for the speed meaning that the right and left speed should be .5
+
+        }
+        else {
+           //if not, the robot should move
+           _diffDrive.tankDrive(0, 0);
+        }*/
+    }
     @Override
     public void teleopPeriodic() {
 
-        String work = "";
+        //String work = ""; debug
 
         /* get gamepad stick values */
         // multiples the y value (raw axis) of the L-stick of the joystick by -1 to get
@@ -74,10 +103,10 @@ public class Robot extends TimedRobot {
         /* get sensor values */
         // double leftPos = _leftFront.GetSelectedSensorPosition(0);
         // double rghtPos = _rghtFront.GetSelectedSensorPosition(0);
-        double leftVelUnitsPer100ms = _leftBack.getSelectedSensorVelocity(0);
-        double rightVelUnitsPer100ms = _rightBack.getSelectedSensorVelocity(0);
+        //double leftVelUnitsPer100ms = _leftBack.getSelectedSensorVelocity(0);
+        //double rightVelUnitsPer100ms = _rightBack.getSelectedSensorVelocity(0);
 
-        work += " L:" + leftVelUnitsPer100ms + " R:" + rightVelUnitsPer100ms;
+        //work += " L:" + leftVelUnitsPer100ms + " R:" + rightVelUnitsPer100ms;
 
         /*
          * drive motor at least 25%, Talons will auto-detect if sensor is out of phase
@@ -86,17 +115,18 @@ public class Robot extends TimedRobot {
         _leftBack.getFaults(_faults_L); // *use this implementation
         _rightBack.getFaults(_faults_R); // *use this implementation
 
-        if (_faults_L.SensorOutOfPhase) { // *use this implementation
+       /* if (_faults_L.SensorOutOfPhase) { // *use this implementation
             work += " L sensor is out of phase";
         }
         if (_faults_R.SensorOutOfPhase) { // *use this implementation
             work += " R sensor is out of phase";
-        }
+        }*/
 
     }
 
     @Override
     public void robotInit() {
+        Ultrasonic.setAutomaticMode(true);
         /* factory default values */
         _rightBack.configFactoryDefault();
         _rightFront.configFactoryDefault();
@@ -125,4 +155,5 @@ public class Robot extends TimedRobot {
         _rightBack.setSensorPhase(false);
         _leftBack.setSensorPhase(true);
     }
+
 }
