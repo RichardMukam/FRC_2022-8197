@@ -62,7 +62,7 @@ public class Robot extends TimedRobot {
     // ps4.setRumble(kRightRumble, 0.5); // rumbles the ps4 controller
   }
   
-  // this method is ran periodically while the robot is in teleop
+  // this method is ran periodically if the robot is in teleop
   @Override
   public void teleopPeriodic() {
     /* robot uses tank drive
@@ -71,10 +71,13 @@ public class Robot extends TimedRobot {
 
     drivingMotors.tankDrive(-1* ps4.getLeftY(), -1 * ps4.getRightY()); // we want positve (+) values to move forwards, and negative (-) to move backwards
 
-    m_lShooterMotor.set(0.5); // spins the motor
-    m_rShooterMotor.set(0.5); // spins the motor
-
-    if (ps4.getCrossButtonPressed() == true) // if you press the X button (cross) on the controller, it'll stop the motor from spinning.
+    while (ps4.getL2Button() == true) 
+    {
+      m_lShooterMotor.set(-1); // spins the motor
+      m_rShooterMotor.set(-1); // spins the motor
+    }
+    
+    while (ps4.getR2ButtonPressed() == true) // if you press the X button (cross) on the controller, it'll stop the motor from spinning.
     {
       m_lShooterMotor.stopMotor();
       m_rShooterMotor.stopMotor();
@@ -95,7 +98,7 @@ public class Robot extends TimedRobot {
     time.start();
   } 
 
-  // this method is ran periodically while the robot is in autonomous
+  // this method is ran periodically if the robot is in autonomous
   @Override
   public void autonomousPeriodic()
   {
