@@ -17,6 +17,14 @@ import edu.wpi.first.wpilibj.PS4Controller;
 import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.Timer;
 
+//limelight
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
+
+//lime light in void func
+
 public class Robot extends TimedRobot {
     // right side
     WPI_VictorSPX _rightBack = new WPI_VictorSPX(1);
@@ -155,5 +163,23 @@ public class Robot extends TimedRobot {
         _rightBack.setSensorPhase(false);
         _leftBack.setSensorPhase(true);
     }
+    public void(){
+        NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
+        NetworkTableEntry tx = table.getEntry("tx");
+        NetworkTableEntry ty = table.getEntry("ty");
+        NetworkTableEntry ta = table.getEntry("ta");
 
+        //read values periodically
+        double x_val = tx.getDouble(0.0);
+        double y_val = ty.getDouble(0.0);
+        double area = ta.getDouble(0.0);
+
+        //post to smart dashboard periodically
+        SmartDashboard.putNumber("LimelightX", x_val);
+        SmartDashboard.putNumber("LimelightY", y_val);
+        SmartDashboard.putNumber("LimelightArea", area);
+        
+        
+        
+    }
 }
