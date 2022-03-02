@@ -3,110 +3,155 @@
 // the WPILib BSD license file in the root directory of this project.
 
 package frc.robot;
-//ctre
-import com.ctre.phoenix.motorcontrol.Faults; //debugger
-import com.ctre.phoenix.motorcontrol.InvertType; //inverted
-import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX; //motorcontroller
 
+
+
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-import edu.wpi.first.wpilibj.Joystick; //controller or joystick
+import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
+import edu.wpi.first.wpilibj.motorcontrol.PWMTalonFX;
+import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 
+//Import for PS4
+import edu.wpi.first.wpilibj.motorcontrol.PWMMotorController;
+import edu.wpi.first.wpilibj.PS4Controller;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
+
+//Import for Limelight
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
+
+
+/**
+ * This is a demo program showing the use of the DifferentialDrive class. Runs the motors with
+ * arcade steering.
+ */
 public class Robot extends TimedRobot {
-  WPI_VictorSPX _rightBack = new WPI_VictorSPX(1);
-  WPI_VictorSPX _rightFront = new WPI_VictorSPX(2);
-  WPI_VictorSPX _leftBack = new WPI_VictorSPX(3);  
-  WPI_VictorSPX _leftFront = new WPI_VictorSPX(4); 
-  DifferentialDrive _diffDrive = new DifferentialDrive(_leftBack, _rightBack);
 
-  Joystick _joystick = new Joystick(0);
+  //driving motors
+  private final PWMTalonFX m_topLeft = new PWMTalonFX(4); // the top left motor - intiailizes the motor
+ // private final PWMSparkMax m_topLeft = new PWMSparkMax(4);
+  private final PWMTalonFX m_bottomLeft = new PWMTalonFX(0); // the bottom left motor - intiailizes the motor
+ // private final PWMSparkMax m_bottomLeft = new PWMSparkMax(4);
+  MotorControllerGroup leftMotors = new MotorControllerGroup(m_topLeft, m_bottomLeft); // groups both of the motors on the left side to an object we'll refer later when we use differential drive
 
-  Faults _faults_L = new Faults();
-  Faults _faults_R = new Faults();
+  private final PWMTalonFX m_topRight = new PWMTalonFX(2); // the top right motor - intiailizes the motor
+  private final PWMTalonFX m_bottomRight = new PWMTalonFX(3); // the bottom right motor - intiailizes the motor
+  private final MotorControllerGroup rightMotors = new MotorControllerGroup(m_topRight, m_bottomRight); // groups both of the motors on the left side to an object we'll refer later 
+
+  private final DifferentialDrive drivingMotors = new DifferentialDrive(leftMotors, rightMotors); // differential drive for the motors (can now use tank drive)
+
+  //shooter motors
+  private final PWMTalonFX m_lShooterMotor = new PWMTalonFX(5); // the climber motor on the left side - intiailizes the motor
+  private final PWMTalonFX m_rShooterMotor = new PWMTalonFX(1); // the climber motor on the right side - intiailizes the motor
+  
+  //private final DifferentialDrive m_externalMotorDrive = new DifferentialDrive(m_lShooterMotor, m_rShooterMotor);
+  
+  //adding ps4 controls
+  private final PS4Controller ps4 = new PS4Controller(0);
+
+  //creating an object for the timer
+  private final Timer time = new Timer();
 
   @Override
+  public void robotInit() {
+    /* We need to invert one side of the drivetrain so that positive voltages
+    // result in both sides moving forward. Depending on how your robot's
+    // gearbox is constructed, you might have to invert the left side instead.*/
+    rightMotors.setInverted(true);
+    //m_rShooterMotor.setInverted(true);
+  }
+
+  // this method runs once the robot enters teleop
+  @Override
+  public void teleopInit()
+  {
+    // ps4.setRumble(kLeftRumble, 0.5); // rumbles the ps4 controller (we have access to this method despite it being in GenericHID because the PS4Controller class extends the class "GenericHID")
+    // ps4.setRumble(kRightRumble, 0.5); // rumbles the ps4 controller
+  }
+  
+  // this method is ran periodically if the robot is in teleop
+  @Override
   public void teleopPeriodic() {
+    /* robot uses tank drive
+      that means that the left stick on the PS4 controller controls the motors/wheels on the left side of the robot, and right stick controls the right side
+    */
+    ps4.setRumble(RumbleType.kLeftRumble, 0.9);
+    ps4.setRumble(RumbleType.kRightRumble, 0.9);
 
-        String work = "";
+    drivingMotors.tankDrive(-0.4* ps4.getLeftY(), -0.4  * ps4.getRightY()); // we want positve (+) values to move forwards, and negative (-) to move backwards
 
-        /* get gamepad stick values */
-        //multiples the y value (raw axis) of the L-stick of the joystick by -1 to get a final result
-        double turn = +1 * _joystick.getRawAxis(0); /* positive is right */ //original value is +1  
-        double forw = -1 * _joystick.getRawAxis(1); /* positive is forward */ //original value is -1 
-        boolean btn1 = _joystick.getRawButton(1); /* is button is down, print joystick values */
-
-        /* deadband gamepad 10% */
-        if (Math.abs(forw) < 0.10) {
-            forw = 0;
-        }
-        if (Math.abs(turn) < 0.10) {
-            turn = 0;
-        }
-
-        /* drive robot */
-        _diffDrive.arcadeDrive(forw, turn);
-
-        /*
-         * [2] Make sure Gamepad Forward is positive for FORWARD, and GZ is positive for
-         * RIGHT
-         */
-        work += " GF:" + forw + " GT:" + turn;
-
-        /* get sensor values */
-        // double leftPos = _leftFront.GetSelectedSensorPosition(0);
-        // double rghtPos = _rghtFront.GetSelectedSensorPosition(0);
-        double leftVelUnitsPer100ms = _leftBack.getSelectedSensorVelocity(0);
-        double rightVelUnitsPer100ms = _rightBack.getSelectedSensorVelocity(0);
-
-        work += " L:" + leftVelUnitsPer100ms + " R:" + rightVelUnitsPer100ms;
-
-        /*
-         * drive motor at least 25%, Talons will auto-detect if sensor is out of phase
-         */
-        // *faults are for debugging, checking problems
-        _leftBack.getFaults(_faults_L); // *use this implementation
-        _rightBack.getFaults(_faults_R); // *use this implementation
-
-        if (_faults_L.SensorOutOfPhase) { // *use this implementation
-            work += " L sensor is out of phase";
-        }
-        if (_faults_R.SensorOutOfPhase) { // *use this implementation
-            work += " R sensor is out of phase";
-        }
-
-        /* print to console if btn1 is held down */
-        // *debugging
-        if (btn1) {
-            System.out.println(work);
-        }
+    while (ps4.getL2Button() == true) 
+    {
+      m_lShooterMotor.set(-1); // spins the motor
+      m_rShooterMotor.set(-1); // spins the motor
     }
-
-    @Override
-    public void robotInit() {
-        /* factory default values */
-        _rightBack.configFactoryDefault();
-        _rightFront.configFactoryDefault();
-        _leftBack.configFactoryDefault();
-        _leftFront.configFactoryDefault();
-
-        /* set up followers */
-        _rightFront.follow(_rightBack);
-        _leftFront.follow(_leftBack);
-
-        /* [3] flip values so robot moves forward when stick-forward/LEDs-green */
-        _rightBack.setInverted(true); // !< Update this
-        _leftBack.setInverted(false); // !< Update this
-
-        /*
-         * set the invert of the followers to match their respective master controllers
-         */
-        _rightFront.setInverted(InvertType.FollowMaster);
-        _leftFront.setInverted(InvertType.FollowMaster);
-
-        /*
-         * [4] adjust sensor phase so sensor moves positive when Talon LEDs are green
-         */
-        _rightBack.setSensorPhase(true);
-        _leftBack.setSensorPhase(true);
+    
+    while (ps4.getR2ButtonPressed() == true) // if you press the X button (cross) on the controller, it'll stop the motor from spinning.
+    {
+      m_lShooterMotor.stopMotor();
+      m_rShooterMotor.stopMotor();
     }
+    System.out.println("teleop works");
+
+    //m_externalMotorDrive.arcadeDrive(-ps4.getRightY(), 0.0); //shooter motor controller
+
+    //m_externalMotorDrive.setSpeed()
+    
+  }
+
+  // this method runs once the robot enters autonomous
+  @Override
+  public void autonomousInit()
+  {
+    time.reset();
+    time.start();
+  } 
+
+  // this method is ran periodically if the robot is in autonomous
+  @Override
+  public void autonomousPeriodic()
+  {
+    if (time.get() <= 15.0) // our autonomous period will run for five (5) seconds 
+    {
+      System.out.println("autonomous works: 3 sec");
+      System.out.println(time.get());
+      drivingMotors.tankDrive(-0.5, 0.5);
+    }
+    else
+    {
+      drivingMotors.stopMotor();
+      time.stop();
+    }
+  }
+
+  @Override
+  public void testPeriodic()
+  {
+    System.out.println("hi");
+  }
+  public void limeLight() {
+    //Limelight
+
+    NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
+    NetworkTableEntry tx = table.getEntry("tx");
+    NetworkTableEntry ty = table.getEntry("ty");
+    NetworkTableEntry ta = table.getEntry("ta");
+  
+    //read values periodically
+
+    double x_axis = tx.getDouble(0.0);
+    double y_axis = ty.getDouble(0.0);
+    double area = ta.getDouble(0.0);
+  
+    //post to smart dashboard periodically
+
+    SmartDashboard.putNumber("LimelightX", x_axis);
+    SmartDashboard.putNumber("LimelightY", y_axis);
+    SmartDashboard.putNumber("LimelightArea", area);
+  }
 }
