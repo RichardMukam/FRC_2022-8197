@@ -4,169 +4,150 @@
 
 package frc.robot;
 
+//limelight
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
+
+//ctre
+import com.ctre.phoenix.motorcontrol.InvertType;
+import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 
 
-import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
-import edu.wpi.first.wpilibj.motorcontrol.PWMTalonFX;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
-
-//Import for PS4
-import edu.wpi.first.wpilibj.motorcontrol.PWMMotorController;
 import edu.wpi.first.wpilibj.PS4Controller;
+import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 
-//Import for Limelight
+//limelight imports
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 
 
-/**
- * This is a demo program showing the use of the DifferentialDrive class. Runs the motors with
- * arcade steering.
- */
 public class Robot extends TimedRobot {
+    // right side
+    WPI_VictorSPX _rightBack = new WPI_VictorSPX(1);
+    WPI_VictorSPX _rightFront = new WPI_VictorSPX(2);
+    MotorControllerGroup _driveRight = new MotorControllerGroup(_rightBack, _rightFront);
+    // left side
+    WPI_VictorSPX _leftBack = new WPI_VictorSPX(3);
+    WPI_VictorSPX _leftFront = new WPI_VictorSPX(4);
+    MotorControllerGroup _driveLeft = new MotorControllerGroup(_leftBack, _leftFront);
+    // set up for differential drive
+    DifferentialDrive _diffDrive = new DifferentialDrive(_driveLeft, _driveRight); 
 
-  //driving motors
-  private final PWMTalonFX m_topLeft = new PWMTalonFX(4); // the top left motor - intiailizes the motor
- // private final PWMSparkMax m_topLeft = new PWMSparkMax(4);
-  private final PWMTalonFX m_bottomLeft = new PWMTalonFX(0); // the bottom left motor - intiailizes the motor
- // private final PWMSparkMax m_bottomLeft = new PWMSparkMax(4);
-  MotorControllerGroup leftMotors = new MotorControllerGroup(m_topLeft, m_bottomLeft); // groups both of the motors on the left side to an object we'll refer later when we use differential drive
+    //sensors
+    //Ultrasonic _Ultrasonic = new Ultrasonic(1,1);
 
-  private final PWMTalonFX m_topRight = new PWMTalonFX(2); // the top right motor - intiailizes the motor
-  private final PWMTalonFX m_bottomRight = new PWMTalonFX(3); // the bottom right motor - intiailizes the motor
-  private final MotorControllerGroup rightMotors = new MotorControllerGroup(m_topRight, m_bottomRight); // groups both of the motors on the left side to an object we'll refer later 
+    //timer (for autonomous)
+    Timer time = new Timer();
 
-  private final DifferentialDrive drivingMotors = new DifferentialDrive(leftMotors, rightMotors); // differential drive for the motors (can now use tank drive)
-
-  //shooter motors
-  private final PWMTalonFX m_lShooterMotor = new PWMTalonFX(5); // the climber motor on the left side - intiailizes the motor
-  private final PWMTalonFX m_rShooterMotor = new PWMTalonFX(1); // the climber motor on the right side - intiailizes the motor
-  
-  //private final DifferentialDrive m_externalMotorDrive = new DifferentialDrive(m_lShooterMotor, m_rShooterMotor);
-  
-  //adding ps4 controls
-  private final PS4Controller ps4 = new PS4Controller(0);
-
-  //creating an object for the timer
-  private final Timer time = new Timer();
-
-  @Override
-  public void robotInit() {
-    NetworkTableInstance.getDefault().getTable("limelight").getEntry("<variablename>").setNumber(3);
-    /* We need to invert one side of the drivetrain so that positive voltages
-    // result in both sides moving forward. Depending on how your robot's
-    // gearbox is constructed, you might have to invert the left side instead.*/
-    rightMotors.setInverted(true);
-    //m_rShooterMotor.setInverted(true);
-  }
-
-  // this method runs once the robot enters teleop
-  @Override
-  public void teleopInit()
-  {
+    // controllers
+    PS4Controller ps4 = new PS4Controller(0);
     
-    // ps4.setRumble(kLeftRumble, 0.5); // rumbles the ps4 controller (we have access to this method despite it being in GenericHID because the PS4Controller class extends the class "GenericHID")
-    // ps4.setRumble(kRightRumble, 0.5); // rumbles the ps4 controller
-  }
-  
-  // this method is ran periodically if the robot is in teleop
-  @Override
-  public void teleopPeriodic() {
-    /* robot uses tank drive
-      that means that the left stick on the PS4 controller controls the motors/wheels on the left side of the robot, and right stick controls the right side
-    */
-    ps4.setRumble(RumbleType.kLeftRumble, 0.9);
-    ps4.setRumble(RumbleType.kRightRumble, 0.9);
+    @Override
+    public void robotInit() { // ran once   
+        //Ultrasonic.setAutomaticMode(true);
+        /* factory default values */
+        _rightBack.configFactoryDefault();
+        _rightFront.configFactoryDefault();
+        _leftBack.configFactoryDefault();
+        _leftFront.configFactoryDefault();
 
-    drivingMotors.tankDrive(-0.4* ps4.getLeftY(), -0.4  * ps4.getRightY()); // we want positve (+) values to move forwards, and negative (-) to move backwards
+      /* [3] flip values so robot moves forward when stick-forward/LEDs-green */
+        _rightBack.setInverted(false); // !< Update this
+        _leftBack.setInverted(false); // !< Update this
 
-    while (ps4.getL2Button() == true) 
-    {
-      m_lShooterMotor.set(-1); // spins the motor
-      m_rShooterMotor.set(-1); // spins the motor
+        /* set up followers */
+        _rightFront.follow(_rightBack);
+        _leftFront.follow(_leftBack);
+
+        /*
+         * set the invert of the followers to match their respective master controllers
+         */
+        _rightFront.setInverted(InvertType.FollowMaster);
+        _leftFront.setInverted(InvertType.FollowMaster);
+
+        /*
+         * [4] adjust sensor phase so sensor moves positive when Talon LEDs are green
+         */
+        _rightBack.setSensorPhase(false);
+        _leftBack.setSensorPhase(true);
+
     }
     
-    while (ps4.getR2ButtonPressed() == true) // if you press the X button (cross) on the controller, it'll stop the motor from spinning.
-    {
-      m_lShooterMotor.stopMotor();
-      m_rShooterMotor.stopMotor();
+    @Override
+    public void teleopPeriodic() {
+        
+        double m_lMotors = -ps4.getLeftY();
+        double m_rMotors = ps4.getRightY();
+
+        if (Math.abs(m_lMotors) < 0.10) {
+            m_lMotors = 0;
+        }
+        if (Math.abs(m_rMotors) < 0.10) {
+            m_rMotors = 0;
+        }
+        
+        _diffDrive.tankDrive(m_lMotors, m_rMotors);
+
+        // limelight
+        NetworkTableInstance inst = NetworkTableInstance.getDefault();
+        NetworkTable table = inst.getTable("limelight");
+        inst.startClientTeam(6893);
+        NetworkTableEntry xEntry = table.getEntry("tx");
+        NetworkTableEntry yEntry = table.getEntry("ty");
+        NetworkTableEntry aEntry = table.getEntry("ta");
+        NetworkTableEntry sEntry = table.getEntry("ts");
+
+        double tx = xEntry.getDouble(0.0);
+        double ty = yEntry.getDouble(0.0);
+        double ta = aEntry.getDouble(0.0);
+        double ts = sEntry.getDouble(0.0);
+
+
+        // limelight SmartDashboard
+        SmartDashboard.putNumber("Limelight XAxis", tx);
+        SmartDashboard.putNumber("Limelight YAxis", ty);
+        SmartDashboard.putNumber("Limelight TargetDistance", ta);
+        SmartDashboard.putNumber("Limelight Rotation", ts);
     }
-    System.out.println("teleop works");
 
-    //m_externalMotorDrive.arcadeDrive(-ps4.getRightY(), 0.0); //shooter motor controller
-
-    //m_externalMotorDrive.setSpeed()
-    
-  }
-
-  // this method runs once the robot enters autonomous
-  @Override
-  public void autonomousInit()
-  {
-    time.reset();
-    time.start();
-
-    NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
-    NetworkTableEntry tx = table.getEntry("tx");
-    NetworkTableEntry ty = table.getEntry("ty");
-    NetworkTableEntry ta = table.getEntry("ta");
-  
-    //read values periodically
-
-    double x_axis = tx.getDouble(0.0);
-    double y_axis = ty.getDouble(0.0);
-    double area = ta.getDouble(0.0);
-  
-    //post to smart dashboard periodically
-
-    SmartDashboard.putNumber("LimelightX", x_axis);
-    SmartDashboard.putNumber("LimelightY", y_axis);
-    SmartDashboard.putNumber("LimelightArea", area);
-   /*    double targetOffsetAngle_Vertical = ty.getDouble(0.0);
-
-    // how many degrees back is your limelight rotated from perfectly vertical?
-    double limelightMountAngleDegrees = 25.0;
-    
-    // distance from the center of the Limelight lens to the floor
-    double limelightHeightInches = 20.0;
-    
-    // distance from the target to the floor
-    double goalHeightInches = 60.0;
-    
-    double angleToGoalDegrees = limelightMountAngleDegrees + targetOffsetAngle_Vertical;
-    double angleToGoalRadians = angleToGoalDegrees * (3.14159 / 180.0);
-    
-    //calculate distance
-    double distanceFromLimelightToGoalInches = (goalHeightInches - limelightHeightInches)/Math.tan(angleToGoalRadians);  */
-  } 
-
-  // this method is ran periodically if the robot is in autonomous
-  @Override
-  public void autonomousPeriodic()
-  {
-    if (time.get() <= 15.0) // our autonomous period will run for five (5) seconds 
+    @Override
+    public void autonomousInit()
     {
-      System.out.println("autonomous works: 3 sec");
-      System.out.println(time.get());
-      drivingMotors.tankDrive(-0.5, 0.5);
+        time.reset();
+        time.start();
     }
-    else
-    {
-      drivingMotors.stopMotor();
-      time.stop();
-    }
-  }
 
-  @Override
-  public void testPeriodic()
-  {
-    System.out.println("hi");
-  }
+    @Override
+    public void autonomousPeriodic()
+    {
+        if (time.get() <= 1.0)
+        {
+            _diffDrive.tankDrive(-0.4, 0.4);
+            System.out.println("move forward");
+        }
+        if (time.get() > 1.0 && time.get() < 2.0)
+        {
+            _diffDrive.tankDrive(0.6, 0.6);
+            System.out.println("turn");
+        }
+        /*
+        if(_Ultrasonic.getRangeInches() > 12) {
+           // The manuever the robot should do
+           _diffDrive.tankDrive(.5, .5);
+           // *.5 stands for the speed meaning that the right and left speed should be .5
+        }
+        else {
+           //if not, the robot should move
+           _diffDrive.tankDrive(0, 0);
+        }*/
+    }
+    
 }
