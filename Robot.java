@@ -88,13 +88,8 @@ public class Robot extends TimedRobot {
             hood.set(ControlMode.PercentOutput, 1.0);
             feeder.set(ControlMode.PercentOutput, 1.0);            
         }
-        else
-        {
-            shooter.set(0.0);
-            System.out.println("shooter motor is not spinning");
-        }
 
-        if (joystick.getRawButton(2)) //spin the feeder/shooter motors backwards (reverse)
+        else if (joystick.getRawButton(2)) //spin the feeder/shooter motors backwards (reverse)
         {
             feeder.set(ControlMode.PercentOutput, -0.5);
             hood.set(ControlMode.PercentOutput, -0.5);
