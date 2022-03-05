@@ -22,10 +22,15 @@ import edu.wpi.first.wpilibj.Joystick; //general controller import
 import edu.wpi.first.wpilibj.PS4Controller;
 import edu.wpi.first.wpilibj.Timer;
 
-import com.revrobotics.CANSparkMax;
 //spark max
+import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+
+//talonsrx
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.ctre.phoenix.motorcontrol.ControlMode;
+
 
 //limelight
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -46,8 +51,8 @@ public class Robot extends TimedRobot {
     MotorControllerGroup leftMotors = new MotorControllerGroup(leftBack, leftFront);
     // set up for differential drive
     DifferentialDrive _diffDrive = new DifferentialDrive(leftMotors, rightMotors); //this was originally driveRight,driveLeft, but should've been driveLeft,driveRight
-    PWMTalonSRX feeder = new PWMTalonSRX(7);
-    PWMTalonSRX secondFeeder = new PWMTalonSRX(6);                                                                                             
+    TalonSRX feeder = new TalonSRX(7);
+    TalonSRX hood = new TalonSRX(6);                                                                                             
     CANSparkMax shooter = new CANSparkMax(5, MotorType.kBrushless); //neo motor
     
 
@@ -68,11 +73,20 @@ public class Robot extends TimedRobot {
     }
     @Override
     public void teleopPeriodic() {
+        _diffDrive.tankDrive(ps4.getLeftY(), ps4.getRightY());
+        //create a method for the motors to spin
+       
+    }
 
-        if (joystick.getRawButton(1)) 
+    @Override
+    public void testPeriodic()
+    {
+        //test the feeder and shooter motor
+        if (joystick.getRawButton(1)) //spin the feeder/shooter motors forward (in)
         {
-            shooter.set(5.0);
-            System.out.println("shooter motor is spinning");
+            shooter.set(1.0);
+            hood.set(ControlMode.PercentOutput, 1.0);
+            feeder.set(ControlMode.PercentOutput, 1.0);            
         }
         else
         {
@@ -80,10 +94,19 @@ public class Robot extends TimedRobot {
             System.out.println("shooter motor is not spinning");
         }
 
+        if (joystick.getRawButton(2)) //spin the feeder/shooter motors backwards (reverse)
+        {
+            feeder.set(ControlMode.PercentOutput, -0.5);
+            hood.set(ControlMode.PercentOutput, -0.5);
+            shooter.set(0.0);
+        }
+        else
+        {
+            feeder.set(ControlMode.PercentOutput, 0.0);
+            hood.set(ControlMode.PercentOutput, 0.0);
+            shooter.set(0.0);
+        }
 
-        _diffDrive.tankDrive(ps4.getLeftY(), ps4.getRightY());
-        //create a method for the motors to spin
-       
     }
 
     @Override
