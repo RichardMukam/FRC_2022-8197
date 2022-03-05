@@ -93,7 +93,6 @@ public class Robot extends TimedRobot {
         {
             feeder.set(ControlMode.PercentOutput, -0.5);
             hood.set(ControlMode.PercentOutput, -0.5);
-            shooter.set(0.0);
         }
         else
         {
