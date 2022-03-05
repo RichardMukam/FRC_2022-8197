@@ -7,6 +7,7 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.motorcontrol.PWMTalonFX;
+import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
 
 //Import for PS4
 import edu.wpi.first.wpilibj.motorcontrol.PWMMotorController;
@@ -33,17 +34,17 @@ import edu.wpi.first.wpilibj.drive.RobotDriveBase;
 public class Robot extends TimedRobot {
 
   //driving motors
-  private final PWMTalonFX m_topLeft = new PWMTalonFX(4); // the top left motor - intiailizes the motor
+  PWMSparkMax m_topLeft = new PWMSparkMax(4); // the top left motor - intiailizes the motor
  // private final PWMSparkMax m_topLeft = new PWMSparkMax(4);
-  private final PWMTalonFX m_bottomLeft = new PWMTalonFX(0); // the bottom left motor - intiailizes the motor
+  PWMSparkMax m_bottomLeft = new PWMSparkMax(3); // the bottom left motor - intiailizes the motor
  // private final PWMSparkMax m_bottomLeft = new PWMSparkMax(4);
-  private final PWMTalonFX m_topRight = new PWMTalonFX(2); // the top right motor - intiailizes the motor
-  private final PWMTalonFX m_bottomRight = new PWMTalonFX(3); // the bottom right motor - intiailizes the motor
+  PWMSparkMax m_topRight = new PWMSparkMax(2); // the top right motor - intiailizes the motor
+  PWMSparkMax m_bottomRight = new PWMSparkMax(1); // the bottom right motor - intiailizes the motor
   //adding ps4 controls
-  private final PS4Controller ps4 = new PS4Controller(0);
+  PS4Controller ps4 = new PS4Controller(0);
 
   //creating an object for the timer
-  private final Timer time = new Timer();
+  Timer time = new Timer();
 
   //mecanum
   private MecanumDrive Mecanum;
