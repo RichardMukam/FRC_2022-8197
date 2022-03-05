@@ -94,9 +94,12 @@ public class Robot extends TimedRobot {
         // //original value is +1 use this when using arcade drive
         double lSide = -1 * ps4.getLeftY(); // + is forward, getting the y-value of the L-stick, moving up goes fo
         double rSide = +1 * ps4.getRightY(); // + is forwad, gets y-value of R-stick
-        boolean feederButton = _joystick.getRawButtonPressed(2);
-        boolean shootButton = _joystick.getRawButtonPressed(1);
-        boolean hoodButton = _joystick.getRawButtonPressed(3);
+        boolean feederButton = ps4.getRawButtonPressed(2);
+        boolean shootButton = ps4.getRawButton(1);
+        boolean hoodButton = ps4.getRawButtonPressed(3);
+        //boolean feederButton = ps4.getCrossButton();
+       // boolean shootButton = ps4.getCrossButton();
+       // boolean hoodButton = ps4.getCrossButton();
 
         /* deadband gamepad 10% */ // basically mistaken movement of L-stick or R-stick
         if (Math.abs(lSide) < 0.10) {
@@ -106,17 +109,17 @@ public class Robot extends TimedRobot {
             rSide = 0;
         }
 
-        if(feederButton)
+        while(feederButton)
         {
-            _feeder.set(3.0);
+            _feeder.set(-1.0);
         }
-        if(shootButton)
+        while(shootButton)
         {
-            _shooter.set(3.0);
+            _shooter.set(-1.0);
         }
-        if(hoodButton)
+        while(hoodButton)
         {
-            _shooterhood.set(3.0);
+            _shooterhood.set(-1.0);
         }
         /*
 
