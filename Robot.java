@@ -5,40 +5,33 @@
 package frc.robot;
 
 //ctre
-import com.ctre.phoenix.motorcontrol.Faults; //debugger
+import com.ctre.phoenix.motorcontrol.Faults; //debugger (use later)
 import com.ctre.phoenix.motorcontrol.InvertType; //inverted
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX; //motorcontroller
 
-//REV sparkmotors
+//general imports
 import edu.wpi.first.wpilibj.MotorSafety;
-import edu.wpi.first.wpilibj.motorcontrol.PWMMotorController;
-import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
-import edu.wpi.first.wpilibj.motorcontrol.PWMTalonFX;
-import edu.wpi.first.wpilibj.motorcontrol.PWMTalonSRX;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.Joystick; //general controller import
 import edu.wpi.first.wpilibj.PS4Controller;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 
-//spark max
+//rev spark max
 import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 //talonsrx
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 
-
 //limelight
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
-
-//lime light in void func
 
 public class Robot extends TimedRobot {
     // right side
@@ -55,7 +48,6 @@ public class Robot extends TimedRobot {
     TalonSRX hood = new TalonSRX(6);                                                                                             
     CANSparkMax shooter = new CANSparkMax(5, MotorType.kBrushless); //neo motor
     
-
     //timer (for autonomous)
     Timer time = new Timer();
 
@@ -66,33 +58,30 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousPeriodic()
     {
-        if (time.get() < 5.0)
+        /*if (time.get() < 5.0)
         {
-            rightBack.set(0.4);
-        }
+            drive   
+        }*/
     }
+
     @Override
     public void teleopPeriodic() {
+        //rumble the controller
+        ps4.setRumble(RumbleType.kLeftRumble, 0.5);
+        ps4.setRumble(RumbleType.kRightRumble, 0.5);
+        //to drive
         _diffDrive.tankDrive(ps4.getLeftY(), ps4.getRightY());
-        //create a method for the motors to spin
-       
-    }
-
-    @Override
-    public void testPeriodic()
-    {
-        //test the feeder and shooter motor
-        if (joystick.getRawButton(1)) //spin the feeder/shooter motors forward (in)
+        //shooter/feeder
+        if (joystick.getRawButton(1)) //spin the feeder/shooter motors forward (in) (trigger button)
         {
             shooter.set(1.0);
-            hood.set(ControlMode.PercentOutput, 1.0);
+            //hood.set(ControlMode.PercentOutput, 0.5);
             feeder.set(ControlMode.PercentOutput, 1.0);            
         }
-
-        else if (joystick.getRawButton(2)) //spin the feeder/shooter motors backwards (reverse)
+        else if (joystick.getRawButton(2)) //spin the feeder/shooter motors backwards (reverse) (side button)
         {
-            feeder.set(ControlMode.PercentOutput, -0.5);
-            hood.set(ControlMode.PercentOutput, -0.5);
+            feeder.set(ControlMode.PercentOutput, -0.25);
+            //hood.set(ControlMode.PercentOutput, -0.5);
         }
         else
         {
@@ -100,11 +89,32 @@ public class Robot extends TimedRobot {
             hood.set(ControlMode.PercentOutput, 0.0);
             shooter.set(0.0);
         }
+        //limelight
+        NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
+        NetworkTableEntry tx = table.getEntry("tx");
+        NetworkTableEntry ty = table.getEntry("ty");
+        NetworkTableEntry ta = table.getEntry("ta");
 
+        //read values periodically
+        double x = tx.getDouble(0.0);
+        double y = ty.getDouble(0.0);
+        double area = ta.getDouble(0.0);
+
+        //post to smart dashboard periodically
+        SmartDashboard.putNumber("LimelightX", x);
+        SmartDashboard.putNumber("LimelightY", y);
+        SmartDashboard.putNumber("LimelightArea", area);
+
+        System.out.println(x);
+        System.out.println(y);
+        System.out.println(area);
     }
 
     @Override
     public void robotInit() {
+        //rumbling the controller as soon as the robot turns on
+        ps4.setRumble(RumbleType.kLeftRumble, 0.1);
+        ps4.setRumble(RumbleType.kRightRumble, 0.1);
         /* factory default values */
         rightBack.configFactoryDefault();
         rightFront.configFactoryDefault();
@@ -126,10 +136,3 @@ public class Robot extends TimedRobot {
         leftFront.setInverted(InvertType.FollowMaster);
     }
 }
-/*
-ps4.getCrossedButton - when this method is used, so long as the button is held, the motor will continue 
-to spin
-ps4.getCrossedButtonPressed - when this method is used, even if the cross button is held, the command will 
-only be executed once. 
-    in other words, when the button is held, the motor will not continue to spin
-*/
