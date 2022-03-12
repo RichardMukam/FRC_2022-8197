@@ -37,44 +37,38 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
  * arcade steering.
  */
 public class Robot extends TimedRobot {
-
-  /*//driving motors
-  PWMSparkMax m_topLeft = new PWMSparkMax(4); // the top left motor - intiailizes the motor
- // private final PWMSparkMax m_topLeft = new PWMSparkMax(4);
-  PWMSparkMax m_bottomLeft = new PWMSparkMax(3); // the bottom left motor - intiailizes the motor
- // private final PWMSparkMax m_bottomLeft = new PWMSparkMax(4);
-  PWMSparkMax m_topRight = new PWMSparkMax(2); // the top right motor - intiailizes the motor
-  PWMSparkMax m_bottomRight = new PWMSparkMax(1); // the bottom right motor - intiailizes the motor
-  //adding ps4 controls*/
-
-
   //driving motors
   CANSparkMax  m_topLeft = new CANSparkMax(1,MotorType.kBrushless); // the top left motor - intiailizes the motor
- // private final PWMSparkMax m_topLeft = new PWMSparkMax(4);
  CANSparkMax  m_bottomLeft = new CANSparkMax(2, MotorType.kBrushless); // the bottom left motor - intiailizes the motor
- // private final PWMSparkMax m_bottomLeft = new PWMSparkMax(4);
  CANSparkMax  m_topRight = new CANSparkMax(4, MotorType.kBrushless); // the top right motor - intiailizes the motor
  CANSparkMax  m_bottomRight = new CANSparkMax(3, MotorType.kBrushless); // the bottom right motor - intiailizes the motor
 
-  //adding Joystick
-  PS4Controller ps4 = new PS4Controller(0);
-  Joystick joystick = new Joystick(0);
+   //creating an object for Joystick
+   PS4Controller ps4 = new PS4Controller(0);
+   Joystick joystick = new Joystick(0);
+  //mecanum
+  private MecanumDrive MecanumDrive;
+  private Joystick joystick2;
 
   //creating an object for the timer
   Timer time = new Timer();
 
-  //mecanum
-  private MecanumDrive Mecanum;
+
   @Override
   public void robotInit() {
-    Mecanum = new MecanumDrive(m_topLeft, m_bottomLeft, m_topRight, m_bottomRight);
+
+    // Invert the right side motors.
+    m_topRight.setInverted(true);
+    m_bottomRight.setInverted(true);
+
+    MecanumDrive = new MecanumDrive(m_topLeft, m_bottomLeft, m_topRight, m_bottomRight);
+
+    joystick2 = new Joystick(0);
 
     //initialize mecanum drives motors
-    NetworkTableInstance.getDefault().getTable("limelight").getEntry("<variablename>").setNumber(3);
     /* We need to invert one side of the drivetrain so that positive voltages
     // result in both sides moving forward. Depending on how your robot's
     // gearbox is constructed, you might have to invert the left side instead.*/
-    //m_rShooterMotor.setInverted(true);
   }
 
   // this method runs once the robot enters teleop
@@ -89,13 +83,41 @@ public class Robot extends TimedRobot {
   // this method is ran periodically if the robot is in teleop
   @Override
   public void teleopPeriodic() {
+    double joystickX = joystick.getX();
+    if (Math.abs(joystickX) < 0.2)
+    {
+      joystickX = 0.0;
+    }
+    if (joystickX < -0.2)
+    {
+      m_topLeft.setInverted(true);
+      m_bottomLeft.setInverted(true);
+    }
+    double joystickY = joystick.getY();
+    if (Math.abs(joystickY) < 0.2)
+    {
+      joystickY = 0.0;
+    }
+    double joystickZ = joystick.getZ();
+    if (Math.abs(joystickZ) < 0.2)
+    {
+      joystickZ = 0.0;
+    }
+    MecanumDrive.driveCartesian(joystickX, -joystickY, joystickZ);
+    MecanumDrive.setSafetyEnabled(true);
     /* robot uses  drive
       that means that the left stick on the PS4 controller controls the motors/wheels on the left side of the robot, and right stick controls the right side
     */
-    ps4.setRumble(RumbleType.kLeftRumble, 0.9);
-    ps4.setRumble(RumbleType.kRightRumble, 0.9);
 
-    Mecanum.driveCartesian(ps4.getLeftY(), ps4.getLeftX(), ps4.getRightX(), 0.0);
+
+
+    // ps4.setRumble(RumbleType.kLeftRumble, 0.9);
+    // ps4.setRumble(RumbleType.kRightRumble, 0.9);
+
+
+
+
+    //MecanumDrive.arcadeDrive(-MecanumDrive.getY(), MecanumDrive.getX());
     // mecanum drive. takes input of left joystick to move left right/foreward back. takes left x input to rotate(I assume). last input is gyroAngle(dont know use)
 
     //raw mecanum code(move forward)
@@ -159,14 +181,14 @@ public class Robot extends TimedRobot {
     {
       System.out.println("autonomous works: 3 sec");
       System.out.println(time.get());
-      Mecanum.driveCartesian(0.5, 0.5, 0.0, 0.0);
+      MecanumDrive.driveCartesian(0.5, 0.5, 0.0, 0.0);
 
 
     }
     else
     {
       time.stop();
-      Mecanum.stopMotor();
+      MecanumDrive.stopMotor();
       //stop motor
     }
   }
