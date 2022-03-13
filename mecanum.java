@@ -44,26 +44,19 @@ public class Robot extends TimedRobot {
  CANSparkMax  m_bottomRight = new CANSparkMax(3, MotorType.kBrushless); // the bottom right motor - intiailizes the motor
 
    //creating an object for Joystick
-   PS4Controller ps4 = new PS4Controller(0);
    Joystick joystick = new Joystick(0);
-  //mecanum
+   Joystick mechanismJoyStick = new Joystick(1);
+  
+   //mecanum
   private MecanumDrive MecanumDrive;
-  private Joystick joystick2;
 
   //creating an object for the timer
   Timer time = new Timer();
 
-
   @Override
   public void robotInit() {
 
-    // Invert the right side motors.
-    m_topRight.setInverted(true);
-    m_bottomRight.setInverted(true);
-
     MecanumDrive = new MecanumDrive(m_topLeft, m_bottomLeft, m_topRight, m_bottomRight);
-
-    joystick2 = new Joystick(0);
 
     //initialize mecanum drives motors
     /* We need to invert one side of the drivetrain so that positive voltages
@@ -75,95 +68,109 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopInit()
   {
-
-    // ps4.setRumble(kLeftRumble, 0.5); // rumbles the ps4 controller (we have access to this method despite it being in GenericHID because the PS4Controller class extends the class "GenericHID")
-    // ps4.setRumble(kRightRumble, 0.5); // rumbles the ps4 controller
+    
   }
   
   // this method is ran periodically if the robot is in teleop
   @Override
   public void teleopPeriodic() {
-    double joystickX = joystick.getX();
-    if (Math.abs(joystickX) < 0.2)
-    {
-      joystickX = 0.0;
-    }
-    if (joystickX < -0.2)
-    {
-      m_topLeft.setInverted(true);
-      m_bottomLeft.setInverted(true);
-    }
-    double joystickY = joystick.getY();
-    if (Math.abs(joystickY) < 0.2)
+    
+    //mecanum drive, all drivetrain behaviors
+
+    double joystickY = joystick.getY(); //storing y-axis values of joystick
+    if (Math.abs(joystickY) < 0.3) //deadband for joystick
     {
       joystickY = 0.0;
     }
-    double joystickZ = joystick.getZ();
-    if (Math.abs(joystickZ) < 0.2)
+    //forward
+    if (joystickY < -0.3) 
+    {
+      m_bottomRight.setInverted(false);
+      m_topRight.setInverted(false);
+      m_topLeft.setInverted(true);
+      m_bottomLeft.setInverted(true);
+    }
+    //backward
+    if (joystickY > 0.3) 
+    {
+      m_bottomRight.setInverted(false);
+      m_topRight.setInverted(false);
+      m_topLeft.setInverted(true);
+      m_bottomLeft.setInverted(true);
+    }
+
+    double joystickX = joystick.getX(); //storing x-axis values of joystick
+    if (Math.abs(joystickX) < 0.3) //deadband for joystick
+    {
+      joystickX = 0.0;
+    }
+    //sliding left
+    if(joystickX < -0.3) 
+    {
+      m_bottomRight.setInverted(true);
+      m_topRight.setInverted(true);
+      m_topLeft.setInverted(false);
+      m_bottomLeft.setInverted(false);
+    }
+    //sliding right
+    if (joystickX > 0.3)
+    {
+      m_bottomRight.setInverted(true);
+      m_topRight.setInverted(true);
+      m_topLeft.setInverted(false);
+      m_bottomLeft.setInverted(false);
+    }
+    //22.5 degrees to 67.5, joystick bounds top right
+    if (joystick.getDirectionDegrees() > 22.5 && joystick.getDirectionDegrees() < 67.5)
+    {
+      m_bottomLeft.stopMotor();
+      m_topRight.stopMotor();
+      m_bottomRight.setInverted(false);
+      m_topLeft.setInverted(true);
+      m_bottomRight.set(-0.5);
+      m_topLeft.set(-0.5);
+    }
+    //112.5 degrees to 157.5, joystick bounds top left
+    if (joystick.getDirectionDegrees() > 112.5 && joystick.getDirectionDegrees() < 157.5)
+    {
+      m_topLeft.stopMotor();
+      m_bottomRight.stopMotor();
+      m_topRight.setInverted(true);
+      m_bottomLeft.setInverted(false);
+      m_topRight.set(-0.5);
+      m_bottomLeft.set(-0.5);
+    }
+    //202.5 degrees to 247.5, joystick bounds bottom left
+    if (joystick.getDirectionDegrees() > 202.5 && joystick.getDirectionDegrees() < 247.5)
+    {
+      m_bottomLeft.stopMotor();
+      m_topRight.stopMotor();
+      m_bottomRight.setInverted(true);
+      m_topLeft.setInverted(false);
+      m_bottomRight.set(0.5);
+      m_topLeft.set(0.5);
+    }
+    //292.5 degrees to 337.5, joystick bounds bottom right
+    if (joystick.getDirectionDegrees() > 292.5 && joystick.getDirectionDegrees() < 337.5)
+    {
+      m_topLeft.stopMotor();
+      m_bottomRight.stopMotor();
+      m_topRight.setInverted(false);
+      m_bottomLeft.setInverted(true);
+      m_topRight.set(0.5);
+      m_bottomLeft.set(0.5);
+    }
+
+    double joystickZ = joystick.getZ(); //storing z-axis values of joystick
+    if (Math.abs(joystickZ) < 0.3) //deadband for joystick
     {
       joystickZ = 0.0;
     }
-    MecanumDrive.driveCartesian(joystickX, -joystickY, joystickZ);
-    MecanumDrive.setSafetyEnabled(true);
-    /* robot uses  drive
-      that means that the left stick on the PS4 controller controls the motors/wheels on the left side of the robot, and right stick controls the right side
-    */
+    //twist of joystick, rotate counterclockwise, (work in prog)
+    /*if (joystick.getTwist() > 0.3)
+    {
 
-
-
-    // ps4.setRumble(RumbleType.kLeftRumble, 0.9);
-    // ps4.setRumble(RumbleType.kRightRumble, 0.9);
-
-
-
-
-    //MecanumDrive.arcadeDrive(-MecanumDrive.getY(), MecanumDrive.getX());
-    // mecanum drive. takes input of left joystick to move left right/foreward back. takes left x input to rotate(I assume). last input is gyroAngle(dont know use)
-
-    //raw mecanum code(move forward)
-    /*if (ps4.getLeftY() < 0.1){
-      m_topLeft.set(ps4.getLeftY()*-1);
-      m_bottomLeft.set(ps4.getLeftY()*-1);
-      m_topRight.set(ps4.getLeftY());
-      m_bottomRight.set(ps4.getLeftY());
-
-    }
-    else if (ps4.getLeftY() > 0.1){
-      m_topLeft.set(ps4.getLeftY()*-1);
-      m_bottomLeft.set(ps4.getLeftY()*-1);
-      m_topRight.set(ps4.getLeftY());
-      m_bottomRight.set(ps4.getLeftY());
-
-    }
-    else{
-      m_topLeft.stopMotor();
-      m_bottomLeft.stopMotor();
-      m_topRight.stopMotor();
-      m_bottomRight.stopMotor();
-    }
-    //move back
-
-    /*
-    //go to right
-    else if (ps4.getRightX() > 0.1){
-      m_topLeft.set(ps4.getRightX());
-      m_bottomLeft.set(ps4.getRightX()*-1);
-      m_topRight.set(ps4.getRightX()*-1);
-      m_bottomRight.set(ps4.getRightX());
-    }
-    //go to left
-    else if (ps4.getRightX() < -0.1){
-      m_topLeft.set(ps4.getLeftY());
-      m_bottomLeft.set(ps4.getLeftY()*-1);
-      m_topRight.set(ps4.getLeftY()*-1);
-      m_bottomRight.set(ps4.getLeftY());
-    }
-    */
-
-
-
-    
-    
+    }*/
   }
 
   // this method runs once the robot enters autonomous
@@ -196,6 +203,6 @@ public class Robot extends TimedRobot {
   @Override
   public void testPeriodic()
   {
-    System.out.println("hi");
+
   }
 }
