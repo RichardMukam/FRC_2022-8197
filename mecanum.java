@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
 //Import for PS4
 import edu.wpi.first.wpilibj.motorcontrol.PWMMotorController;
 import edu.wpi.first.wpilibj.PS4Controller;
+import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
@@ -45,10 +46,10 @@ public class Robot extends TimedRobot {
 
    //creating an object for Joystick
    Joystick joystick = new Joystick(0);
-   Joystick mechanismJoyStick = new Joystick(1);
+   Joystick mechanismJoyStick = new Joystick(1); 
   
    //mecanum
-  private MecanumDrive MecanumDrive;
+   private MecanumDrive MecanumDrive;
 
   //creating an object for the timer
   Timer time = new Timer();
@@ -83,7 +84,7 @@ public class Robot extends TimedRobot {
       joystickY = 0.0;
     }
     //forward
-    if (joystickY < -0.3) 
+    if (joystickY < -0.3 && joystick.getDirectionDegrees() > 337.5 && joystick.getDirectionDegrees() < 22.5) 
     {
       m_bottomRight.setInverted(false);
       m_topRight.setInverted(false);
@@ -91,7 +92,7 @@ public class Robot extends TimedRobot {
       m_bottomLeft.setInverted(true);
     }
     //backward
-    if (joystickY > 0.3) 
+    if (joystickY > 0.3 && joystick.getDirectionDegrees() > 157.5 && joystick.getDirectionDegrees() < 202.5) 
     {
       m_bottomRight.setInverted(false);
       m_topRight.setInverted(false);
@@ -104,8 +105,9 @@ public class Robot extends TimedRobot {
     {
       joystickX = 0.0;
     }
+    
     //sliding left
-    if(joystickX < -0.3) 
+    if(joystickX < -0.3 && joystick.getDirectionDegrees() > 247.5 && joystick.getDirectionDegrees() < 292.5) 
     {
       m_bottomRight.setInverted(true);
       m_topRight.setInverted(true);
@@ -113,7 +115,7 @@ public class Robot extends TimedRobot {
       m_bottomLeft.setInverted(false);
     }
     //sliding right
-    if (joystickX > 0.3)
+    if (joystickX > 0.3 && joystick.getDirectionDegrees() > 67.5 && joystick.getDirectionDegrees() < 112.5) 
     {
       m_bottomRight.setInverted(true);
       m_topRight.setInverted(true);
@@ -121,6 +123,7 @@ public class Robot extends TimedRobot {
       m_bottomLeft.setInverted(false);
     }
     //22.5 degrees to 67.5, joystick bounds top right
+    // if(joystick.getPOV(1) )
     if (joystick.getDirectionDegrees() > 22.5 && joystick.getDirectionDegrees() < 67.5)
     {
       m_bottomLeft.stopMotor();
@@ -131,7 +134,7 @@ public class Robot extends TimedRobot {
       m_topLeft.set(-0.5);
     }
     //112.5 degrees to 157.5, joystick bounds top left
-    if (joystick.getDirectionDegrees() > 112.5 && joystick.getDirectionDegrees() < 157.5)
+    if (joystick.getDirectionDegrees() > 292.5 && joystick.getDirectionDegrees() < 337.5)
     {
       m_topLeft.stopMotor();
       m_bottomRight.stopMotor();
@@ -151,7 +154,7 @@ public class Robot extends TimedRobot {
       m_topLeft.set(0.5);
     }
     //292.5 degrees to 337.5, joystick bounds bottom right
-    if (joystick.getDirectionDegrees() > 292.5 && joystick.getDirectionDegrees() < 337.5)
+    if (joystick.getDirectionDegrees() > 112.5 && joystick.getDirectionDegrees() < 157.5)
     {
       m_topLeft.stopMotor();
       m_bottomRight.stopMotor();
@@ -166,11 +169,7 @@ public class Robot extends TimedRobot {
     {
       joystickZ = 0.0;
     }
-    //twist of joystick, rotate counterclockwise, (work in prog)
-    /*if (joystick.getTwist() > 0.3)
-    {
-
-    }*/
+    MecanumDrive.driveCartesian(joystickY, joystickX, joystickZ);
   }
 
   // this method runs once the robot enters autonomous
