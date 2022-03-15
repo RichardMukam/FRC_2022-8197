@@ -53,7 +53,7 @@ public class Robot extends TimedRobot
   Joystick mechanismJoyStick = new Joystick(1);
   NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
   
-  private MecanumDrive MecanumDrive;
+  private MecanumDrive mecanumDrive;
 
   Timer time = new Timer();
 
@@ -61,7 +61,7 @@ public class Robot extends TimedRobot
   public void robotInit() 
   {
     //initialize mecanum drive
-    MecanumDrive = new MecanumDrive(m_topLeft, m_bottomLeft, m_topRight, m_bottomRight);
+    mecanumDrive = new MecanumDrive(m_topLeft, m_bottomLeft, m_topRight, m_bottomRight);
   }
 
   // this method runs once the robot enters teleop
@@ -75,114 +75,89 @@ public class Robot extends TimedRobot
   @Override
   public void teleopPeriodic() 
   {  
-  //mecanum drive, all drivetrain behaviors
+   //just to test (not at full speed)
+   double speed = 0.2;
+   double joystickY = joystick.getY(); 
 
-  //storing y-axis values of joystick
-  // double joystickY = joystick.getY(); 
-  // //deadband for joystick, if y-axis is less than 0.3, register no value (catch for errors)
-  // if (Math.abs(joystickY) < 0.3) 
-  // {
-  //   joystickY = 0.0;
-  // }
+   if (Math.abs(joystickY) < 0.3) 
+   {
+     joystickY = 0.0;
+   }
 
-  // //forward
-  // if (joystickY < -0.3) 
-  // {
-  //   m_bottomRight.setInverted(false);
-  //   m_topRight.setInverted(false);
-  //   m_topLeft.setInverted(true);
-  //   m_bottomLeft.setInverted(true);
-  // }
-  // //backward
-  // if (joystickY > 0.3) 
-  // {
-  //   m_bottomRight.setInverted(false);
-  //   m_topRight.setInverted(false);
-  //   m_topLeft.setInverted(true);
-  //   m_bottomLeft.setInverted(true);
-  // }
+   if (joystickY < -0.3 && joystick.getDirectionDegrees() < 11.25 && joystick.getDirectionDegrees() > 348.75) 
+   {
+     m_bottomRight.setInverted(false);
+     m_topRight.setInverted(false);
+     m_topLeft.setInverted(true);
+     m_bottomLeft.setInverted(true);
+   }
+   if (joystickY > 0.3 && joystick.getDirectionDegrees() < 191.25 && joystick.getDirectionDegrees() > 168.75) 
+   {
+     m_bottomRight.setInverted(false);
+     m_topRight.setInverted(false);
+     m_topLeft.setInverted(true);
+     m_bottomLeft.setInverted(true);
+   }
+   double joystickX = joystick.getX(); //storing x-axis values of joystick
+   if (Math.abs(joystickX) < 0.3) //deadband for joystick
+   {
+     joystickX = 0.0;
+   }
+   if(joystickX < -0.3 && joystick.getDirectionDegrees() < 281.25 && joystick.getDirectionDegrees() > 258.75) 
+   {
+     m_bottomRight.setInverted(true);
+     m_topRight.setInverted(true);
+     m_topLeft.setInverted(false);
+     m_bottomLeft.setInverted(false);
+   }
+   if (joystickX > 0.3 && joystick.getDirectionDegrees() < 101.0 && joystick.getDirectionDegrees() > 78.75)
+   {
+     m_bottomRight.setInverted(true);
+     m_topRight.setInverted(true);
+     m_topLeft.setInverted(false);
+     m_bottomLeft.setInverted(false);
+   }
 
-  // double joystickX = joystick.getX(); //storing x-axis values of joystick
-  // if (Math.abs(joystickX) < 0.3) //deadband for joystick
-  // {
-  //   joystickX = 0.0;
-  // }
-  // //sliding left
-  // if(joystickX < -0.3) 
-  // {
-  //   m_bottomRight.setInverted(true);
-  //   m_topRight.setInverted(true);
-  //   m_topLeft.setInverted(false);
-  //   m_bottomLeft.setInverted(false);
-  // }
-  // //sliding right
-  // if (joystickX > 0.3)
-  // {
-  //   m_bottomRight.setInverted(true);
-  //   m_topRight.setInverted(true);
-  //   m_topLeft.setInverted(false);
-  //   m_bottomLeft.setInverted(false);
-  // }
-  // //22.5 degrees to 67.5, joystick bounds top right
-  // if (joystick.getDirectionDegrees() > 22.5 && joystick.getDirectionDegrees() < 67.5)
-  // {
-  //   m_bottomLeft.stopMotor();
-  //   m_topRight.stopMotor();
-  //   m_bottomRight.setInverted(false);
-  //   m_topLeft.setInverted(true);
-  //   m_bottomRight.set(-0.5);
-  //   m_topLeft.set(-0.5);
-  // }
+   double joystickZ = joystick.getZ(); 
+   if (Math.abs(joystickZ) < 0.3) 
+   {
+     joystickZ = 0.0;
+   }
+   if (joystickZ < -0.3)
+   {
+    m_bottomRight.setInverted(true);
+    m_topRight.setInverted(true);
+    m_topLeft.setInverted(false);
+    m_bottomLeft.setInverted(false);
+   }
+   if (joystickZ > 0.3)
+   {
+    m_bottomRight.setInverted(true);
+    m_topRight.setInverted(true);
+    m_topLeft.setInverted(false);
+    m_bottomLeft.setInverted(false);
+   }
 
-  // double joystickZ = joystick.getZ(); //storing z-axis values of joystick
-  // if (Math.abs(joystickZ) < 0.3) //deadband for joystick
-  // {
-  //   joystickZ = 0.0;
-  // }
+   if (joystick.getDirectionDegrees() < 337.5 && joystick.getDirectionDegrees() > 292.5)
 
-  // if (joystick.getRawButton(1))
-  // {
-  //   shooter.set(1.0);
-  //   feeder.set(ControlMode.PercentOutput, 0.6);
-  // }
-  // else
-  // {
-  //   shooter.set(0.0);
-  //   feeder.set(ControlMode.PercentOutput, 0.0);
-  // }
- 
-  
-  //twist of joystick, rotate counterclockwise, (work in prog)
-  /*if (joystick.getTwist() > 0.3)
-  {
+   if(joystick.getRawButton(5) && joystickX < 0.3)
+   {
+    m_bottomRight.stopMotor();
+    m_topRight.setInverted(true);
+    m_topRight.set(joystickY);
+    m_topLeft.stopMotor();
+    m_bottomLeft.setInverted(true);
+    m_bottomLeft.set(joystickY);
+    speed = 0.0;
+   }
 
-    }*/
+    mecanumDrive.driveCartesian(joystickY*speed, joystickX*speed, joystickZ*speed);
 
-    // MecanumDrive.driveCartesian(joystickY, joystickX, joystickZ);
 
-    // //limelight
-    
-    // NetworkTableEntry tx = table.getEntry("tx");
-    // NetworkTableEntry ty = table.getEntry("ty");
-    // NetworkTableEntry ta = table.getEntry("ta");
-    // NetworkTableEntry tv = table.getEntry("tv");
 
-    // // double x = tx.getDouble(0);
-    // // double y = ty.getDouble(0);
-    // double area = ta.getDouble(0.0);
-    // // double isTarget = tv.getDouble(0);
+    //double s = 0.2;
 
-    // // SmartDashboard.putNumber("LimelightX", x);
-    // // SmartDashboard.putNumber("LimelightY", y);
-    // SmartDashboard.putNumber("LimelightArea: ", area);
-    // // SmartDashboard.putNumber("LimelightIsTarget", isTarget);
-
-    // System.out.println(area);
-    // System.out.println(isTarget);
-
-    double s = 0.2;
-
-    MecanumDrive.driveCartesian( joystick.getRawAxis(1)*s, -joystick.getRawAxis(0)*s, joystick.getRawAxis(2)*s);
+    //MecanumDrive.driveCartesian(joystick.getRawAxis(1)*s, -joystick.getRawAxis(0)*s, joystick.getRawAxis(2)*s);
 
   }
 
@@ -211,14 +186,14 @@ public class Robot extends TimedRobot
     }
     else if(time.get() <= 7.0){
       // drive backward 
-      MecanumDrive.driveCartesian(-0.5,0.0, 0.0);
+      mecanumDrive.driveCartesian(-0.5,0.0, 0.0);
       shooter.set(0.0);
       feeder.set(ControlMode.PercentOutput, 0.0);
     }
     else
     {
       time.stop();
-      MecanumDrive.stopMotor();
+      mecanumDrive.stopMotor();
       //stop motor
     }
   }
