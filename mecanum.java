@@ -152,6 +152,68 @@ public class Robot extends TimedRobot
    }
 
     mecanumDrive.driveCartesian(joystickY*speed, joystickX*speed, joystickZ*speed);
+    
+    // gebys button controlled diagonal movement->
+    double diagSpeed = 0.0;
+    // speed for diagonal movement
+    boolean isAngle = false;
+    // if you are moving diagonally
+    if(joystick.getRawButtonPressed(7)){
+      diagSpeed = 0.2;
+      
+    }
+    if(joystick.getRawButtonPressed(8)){
+      diagSpeed = 0.5;
+      
+    }
+    if(joystick.getRawButtonPressed(9)){
+      diagSpeed = 1.0;
+      
+    }
+    //changing speed for each button pressed
+
+    if(joystick.getRawButton(3)||joystick.getRawButton(4)||joystick.getRawButton(5)||joystick.getRawButton(6))
+    {
+     isAngle = true;
+    }// if any of those diagonal controll buttons are pressed then angle movement is true
+    if(joystick.getRawButton(5)){
+      m_bottomRight.stopMotor();
+      m_topLeft.stopMotor();
+      m_topRight.setInverted(true);
+      m_bottomLeft.setInverted(true);
+      m_topRight.set(diagSpeed);
+      m_bottomLeft.set(diagSpeed);
+    }
+    if(joystick.getRawButton(6)){
+      m_topLeft.setInverted(true);
+      m_bottomRight.setInverted(true);
+      m_topRight.stopMotor();
+      m_bottomLeft.stopMotor();
+      m_bottomRight.set(diagSpeed);
+      m_topLeft.set(diagSpeed);
+    }
+   if(joystick.getRawButton(3)){
+      m_topLeft.setInverted(true);
+      m_bottomRight.setInverted(true);
+      m_topRight.stopMotor();
+      m_bottomLeft.stopMotor();
+      m_bottomRight.set(-diagSpeed);
+      m_topLeft.set(-diagSpeed);
+    }
+    if(joystick.getRawButton(4)){
+      m_bottomRight.stopMotor();
+      m_topLeft.stopMotor();
+      m_topRight.setInverted(true);
+      m_bottomLeft.setInverted(true);
+      m_topRight.set(-diagSpeed);
+      m_bottomLeft.set(-diagSpeed);
+    }
+    //setting motor directions based on mecanum chart
+    if(isAngle == false){
+      mecanumDrive.driveCartesian(joystickY*speed, joystickX*speed, joystickZ*speed);
+    }
+    // if you arent moving diagonally then it initiates normal mechanum, so the code doesnt mix up
+    
 
 
 
