@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
 import edu.wpi.first.wpilibj.motorcontrol.PWMMotorController;
 import edu.wpi.first.wpilibj.PS4Controller;
 import edu.wpi.first.wpilibj.Compressor;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Timer;
@@ -33,6 +34,7 @@ import com.ctre.phoenix.CANifier.PWMChannel;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 //Pneumatics
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import static edu.wpi.first.wpilibj.DoubleSolenoid.Value.*;
 //camera
 import edu.wpi.first.cameraserver.CameraServer;
 
@@ -53,6 +55,11 @@ public class Robot extends TimedRobot
 
   //pneumatics compressor
   Compressor pcmCompressor = new Compressor(0, PneumaticsModuleType.CTREPCM); 
+
+  //pneumatics solenoids
+  DoubleSolenoid solenoid1 = new DoubleSolenoid(4,PneumaticsModuleType.CTREPCM,4, 5);
+  
+
   
   private MecanumDrive MecanumDrive;
 
@@ -60,13 +67,23 @@ public class Robot extends TimedRobot
 
   @Override
   public void robotInit() 
-  {
+  { 
     //initialize mecanum drive
     CameraServer.startAutomaticCapture();
 
     //pneumatics
     pcmCompressor.enableDigital();
     pcmCompressor.disable();
+
+    //enabling solenoid channels
+    solenoid1.set(kOff);
+    solenoid1.set(kForward);
+    solenoid1.set(kReverse);
+
+    //If the solenoid is set to forward, it'll be set to reverse. If the solenoid is set to reverse, it'll be set to forward. If the solenoid is set to off, nothing happens.
+    solenoid1.toggle();
+
+
 
     boolean enabled = pcmCompressor.enabled();
     boolean pressureSwitch = pcmCompressor.getPressureSwitchValue();
