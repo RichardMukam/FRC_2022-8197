@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 //Import for mecanumdrive
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
@@ -54,12 +55,8 @@ public class Robot extends TimedRobot
   NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
 
   //pneumatics compressor
-  Compressor pcmCompressor = new Compressor(0, PneumaticsModuleType.CTREPCM); 
-
-  //pneumatics solenoids
-  DoubleSolenoid solenoid1 = new DoubleSolenoid(4,PneumaticsModuleType.CTREPCM,4, 5);
-  
-
+  Compressor pcmCompressor = new Compressor(1,PneumaticsModuleType.CTREPCM); 
+  DoubleSolenoid solenoid1 = new DoubleSolenoid(PneumaticsModuleType.CTREPCM,4, 5);
   
   private MecanumDrive MecanumDrive;
 
@@ -68,33 +65,24 @@ public class Robot extends TimedRobot
   @Override
   public void robotInit() 
   { 
-    //initialize mecanum drive
     CameraServer.startAutomaticCapture();
 
     //pneumatics
-    pcmCompressor.enableDigital();
     pcmCompressor.disable();
 
-    //enabling solenoid channels
+    //stops solenoid when robot turns on
     solenoid1.set(kOff);
-    solenoid1.set(kForward);
-    solenoid1.set(kReverse);
 
     //If the solenoid is set to forward, it'll be set to reverse. If the solenoid is set to reverse, it'll be set to forward. If the solenoid is set to off, nothing happens.
     solenoid1.toggle();
-
-
-
-    boolean enabled = pcmCompressor.enabled();
-    boolean pressureSwitch = pcmCompressor.getPressureSwitchValue();
-    double current = pcmCompressor.getCurrent();
-    
+    //initialize mecanum drive
     MecanumDrive = new MecanumDrive(m_topLeft, m_bottomLeft, m_topRight, m_bottomRight);
   }
 
+
   // this method runs once the robot enters teleop
   @Override
-  public void teleopInit()
+  public void teleopInit() 
   {
     
   }
@@ -103,6 +91,7 @@ public class Robot extends TimedRobot
   @Override
   public void teleopPeriodic() 
   { 
+    //mechhanism start
     if (mechanismJoyStick.getRawButton(1)){
       shooter.set(1.0);
     }
@@ -130,6 +119,32 @@ public class Robot extends TimedRobot
     else{
       intake.set(ControlMode.Current,0.0);
     }
+    //feeder,shooter and intake end
+
+    //pneumatics start
+    if(mechanismJoyStick.getRawButton(7))
+    {
+      solenoid1.toggle();
+    }
+    
+    if (mechanismJoyStick.getRawButton(4))
+    {
+      solenoid1.set(Value.kForward);
+    }
+    else if(mechanismJoyStick.getRawButton(5))
+    {
+      solenoid1.set(Value.kReverse);
+    }
+
+    if (mechanismJoyStick.getRawButton(8))
+    {
+        pcmCompressor.enableDigital();
+    }
+    else if (mechanismJoyStick.getRawButton(9))
+    {
+      pcmCompressor.disable();
+    }
+    //pneumatics end
 
     /*double joystickY = joystick.getY(); 
     double joystickX = joystick.getX();
@@ -209,7 +224,7 @@ public class Robot extends TimedRobot
   @Override
   public void autonomousPeriodic()
   {
-    /*if(time.get() <= 2){
+    if(time.get() <= 2){
       shooter.set(1.0);
     }
     else if (time.get() <= 5.0) // our autonomous period will run for three (3) seconds 
@@ -230,8 +245,9 @@ public class Robot extends TimedRobot
     {
       time.stop();
       MecanumDrive.stopMotor();
+      solenoid1.set(Value.kForward);
       //stop motor
-    }*/
+    }
   }
 
   @Override
