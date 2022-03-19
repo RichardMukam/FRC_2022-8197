@@ -90,7 +90,7 @@ public class Robot extends TimedRobot
     double joystickY = joystick.getY();
     double joystickX = joystick.getX();
     double joystickZ = joystick.getZ();
-    double xyspeed = 1.0;
+    double xyspeed = 0.8;
     double zspeed = 0.5;
 
     //deadband values
@@ -156,6 +156,17 @@ public class Robot extends TimedRobot
       m_intake.set(TalonFXControlMode.PercentOutput, 0.0);
       m_feeder.set(TalonSRXControlMode.PercentOutput, 0.0);
     }
+    //intake 
+    if (mechanismJoyStick.getRawButton(10))
+    {
+      m_intake.set(TalonFXControlMode.PercentOutput, -1.0);
+      m_feeder.set(TalonSRXControlMode.PercentOutput, -1.0);
+    }
+
+    if (mechanismJoyStick.getRawButton(7))
+    {
+      m_shooter.set(-0.8);
+    }
     
     //encoders
     tlM = m_topLeft.getEncoder(Type.kHallSensor, 42);
@@ -189,36 +200,34 @@ public class Robot extends TimedRobot
   @Override
   public void autonomousPeriodic()
   {
-    // go backwards for five seconds
-    if (time.get() < 5.0)
+    // shooter winds up
+    if (time.get() < 2.5)
     {
-      m_topLeft.set(0.5);
-      m_topRight.set(0.5);
-      m_bottomLeft.set(0.5);
-      m_bottomRight.set(0.5);
+      m_shooter.set(-0.8);
     }
-
-    if (time.get() > 5.0 && time.get() < 7.0)
+    // shooter and feeder, (SHOOTING)
+    if (time.get() > 2.5 && time.get() < 6.0)
+    {
+      m_shooter.set(-0.8);
+      m_feeder.set(TalonSRXControlMode.PercentOutput, -1.0);
+    }
+    // moves backwards (to get point), feeder and shooter stop
+    if (time.get() > 6.0 && time.get() < 8.5)
+    {
+      m_topLeft.set(-0.2);
+      m_topRight.set(-0.2);
+      m_bottomLeft.set(-0.2);
+      m_bottomRight.set(-0.2);
+      m_shooter.set(0.0);
+      m_feeder.set(TalonSRXControlMode.PercentOutput, 0.0);
+    }
+    // drive train stops
+    if (time.get() > 8.5)
     {
       m_topLeft.set(0.0);
       m_topRight.set(0.0);
       m_bottomLeft.set(0.0);
       m_bottomRight.set(0.0);
-      m_shooter.set(0.7);
-    }
-
-    if (time.get() > 7.0 && time.get() < 10.0)
-    {
-      m_intake.set(TalonFXControlMode.PercentOutput, 1.0);
-      m_feeder.set(TalonSRXControlMode.PercentOutput, 1.0);
-      m_shooter.set(1.0);
-    }
-
-    if (time.get() > 10.0)
-    {
-      m_intake.set(TalonFXControlMode.PercentOutput, 0.0);
-      m_feeder.set(TalonSRXControlMode.PercentOutput, 0.0);
-      m_shooter.set(0.0);
     }
   }
 
