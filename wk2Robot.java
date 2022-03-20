@@ -26,8 +26,9 @@ import edu.wpi.first.wpilibj.drive.RobotDriveBase;
 
 //spark motors
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-
+import com.revrobotics.SparkMaxRelativeEncoder.Type;
 //talonfx & talonsrx
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
@@ -46,14 +47,23 @@ public class Robot extends TimedRobot
   private CANSparkMax m_shooter;
   private TalonFX m_intake;
   private TalonSRX m_feeder;
+  CANSparkMax m_topLeft;
+  CANSparkMax m_bottomLeft;
+  CANSparkMax m_topRight;
+  CANSparkMax m_bottomRight;
+  RelativeEncoder tlM;
+  RelativeEncoder blM;
+  RelativeEncoder trM;
+  RelativeEncoder brM;
+
 
   @Override
   public void robotInit() 
   {
-    CANSparkMax  m_topLeft = new CANSparkMax(1,MotorType.kBrushless); 
-    CANSparkMax  m_bottomLeft = new CANSparkMax(2, MotorType.kBrushless); 
-    CANSparkMax  m_topRight = new CANSparkMax(4, MotorType.kBrushless); 
-    CANSparkMax  m_bottomRight = new CANSparkMax(3, MotorType.kBrushless);
+    m_topLeft = new CANSparkMax(1,MotorType.kBrushless); 
+    m_bottomLeft = new CANSparkMax(2, MotorType.kBrushless); 
+    m_topRight = new CANSparkMax(4, MotorType.kBrushless); 
+    m_bottomRight = new CANSparkMax(3, MotorType.kBrushless);
     m_shooter = new CANSparkMax(5, MotorType.kBrushless);
     m_intake = new TalonFX(7);
     m_feeder = new TalonSRX(6);
@@ -76,12 +86,14 @@ public class Robot extends TimedRobot
   @Override
   public void teleopPeriodic() 
   {  
+    //getting joystick values
     double joystickY = joystick.getY();
     double joystickX = joystick.getX();
     double joystickZ = joystick.getZ();
-    double xyspeed = 1.0;
-    double zspeed = 0.4;
+    double xyspeed = 0.8;
+    double zspeed = 0.5;
 
+    //deadband values
     if (Math.abs(joystickY) < 0.3)
     {
       joystickY = 0.0;
@@ -95,23 +107,86 @@ public class Robot extends TimedRobot
       joystickZ = 0.0;
     }
 
+    //mecanum drive function
     mecanumDrive.driveCartesian(-joystickY*xyspeed, joystickX*xyspeed, joystickZ*zspeed);
 
-    if (mechanismJoyStick.getRawButton(1))
+    //shooter,feeder mechanism
+      //shooter
+    if (joystick.getRawButton(1))
     {
       m_shooter.set(1.0);
     }
+    else
+    {
+      m_shooter.set(0.0);
+    }
+
+      //reverse all
     if (mechanismJoyStick.getRawButton(2))
     {
       m_shooter.set(-1.0);
       m_intake.set(TalonFXControlMode.PercentOutput, -1.0);
       m_feeder.set(TalonSRXControlMode.PercentOutput, -1.0);
     }
+    else
+    {
+      m_shooter.set(0.0);
+      m_intake.set(TalonFXControlMode.PercentOutput, 0.0);
+      m_feeder.set(TalonSRXControlMode.PercentOutput, 0.0);
+    }
+      //intake,feeder
     if (mechanismJoyStick.getRawButton(3))
+    {
+      m_intake.set(TalonFXControlMode.PercentOutput, -1.0);
+      m_feeder.set(TalonSRXControlMode.PercentOutput, -1.0);
+    }
+    else
+    {
+      m_intake.set(TalonFXControlMode.PercentOutput, 0.0);
+      m_feeder.set(TalonSRXControlMode.PercentOutput, 0.0);
+    }
+    //reverse intake,feeder
+    if (mechanismJoyStick.getRawButton(4))
     {
       m_intake.set(TalonFXControlMode.PercentOutput, 1.0);
       m_feeder.set(TalonSRXControlMode.PercentOutput, 1.0);
     }
+    else
+    {
+      m_intake.set(TalonFXControlMode.PercentOutput, 0.0);
+      m_feeder.set(TalonSRXControlMode.PercentOutput, 0.0);
+    }
+    //intake 
+    if (mechanismJoyStick.getRawButton(10))
+    {
+      m_intake.set(TalonFXControlMode.PercentOutput, -1.0);
+      m_feeder.set(TalonSRXControlMode.PercentOutput, -1.0);
+    }
+
+    if (mechanismJoyStick.getRawButton(7))
+    {
+      m_shooter.set(-0.8);
+    }
+    
+    //encoders
+    tlM = m_topLeft.getEncoder(Type.kHallSensor, 42);
+    blM = m_bottomLeft.getEncoder(Type.kHallSensor, 42);
+    trM = m_topRight.getEncoder(Type.kHallSensor, 42);
+    brM = m_bottomRight.getEncoder(Type.kHallSensor, 42);
+
+// wheels are 8 inches
+    tlM.setPosition(0.0);
+    blM.setPosition(0.0);
+    trM.setPosition(0.0);
+    brM.setPosition(0.0);
+
+
+    
+    SmartDashboard.putNumber("Top Left Motor Position", tlM.getPosition());
+    SmartDashboard.putNumber("Bottom Left Motor Position", blM.getPosition());
+    SmartDashboard.putNumber("Top Right Motor Position", trM.getPosition());
+    SmartDashboard.putNumber("Bottom Right Motor Position", brM.getPosition());
+
     
   }
 
@@ -125,7 +200,35 @@ public class Robot extends TimedRobot
   @Override
   public void autonomousPeriodic()
   {
-
+    // shooter winds up
+    if (time.get() < 2.5)
+    {
+      m_shooter.set(-0.8);
+    }
+    // shooter and feeder, (SHOOTING)
+    if (time.get() > 2.5 && time.get() < 6.0)
+    {
+      m_shooter.set(-0.8);
+      m_feeder.set(TalonSRXControlMode.PercentOutput, -1.0);
+    }
+    // moves backwards (to get point), feeder and shooter stop
+    if (time.get() > 6.0 && time.get() < 8.5)
+    {
+      m_topLeft.set(-0.2);
+      m_topRight.set(-0.2);
+      m_bottomLeft.set(-0.2);
+      m_bottomRight.set(-0.2);
+      m_shooter.set(0.0);
+      m_feeder.set(TalonSRXControlMode.PercentOutput, 0.0);
+    }
+    // drive train stops
+    if (time.get() > 8.5)
+    {
+      m_topLeft.set(0.0);
+      m_topRight.set(0.0);
+      m_bottomLeft.set(0.0);
+      m_bottomRight.set(0.0);
+    }
   }
 
   @Override
