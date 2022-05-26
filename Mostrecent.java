@@ -29,6 +29,7 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.SparkMaxRelativeEncoder.Type;
+
 //talonfx & talonsrx
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
@@ -42,20 +43,21 @@ public class Robot extends TimedRobot
 {
   private MecanumDrive mecanumDrive;
   Joystick joystick = new Joystick(0);
-  Joystick mechanismJoyStick = new Joystick(1);
+  GenericHID mecJoystick = new GenericHID(1);
   Timer time = new Timer();
-  private CANSparkMax m_shooter;
-  private TalonFX m_intake;
-  private TalonSRX m_feeder;
+  CANSparkMax m_shooter;
+  TalonFX m_intake;
+  TalonSRX m_feeder;
   CANSparkMax m_topLeft;
   CANSparkMax m_bottomLeft;
   CANSparkMax m_topRight;
   CANSparkMax m_bottomRight;
+  CANSparkMax m_climber;
   RelativeEncoder tlM;
   RelativeEncoder blM;
   RelativeEncoder trM;
   RelativeEncoder brM;
-
+  RelativeEncoder shooter;  
 
   @Override
   public void robotInit() 
@@ -67,6 +69,7 @@ public class Robot extends TimedRobot
     m_shooter = new CANSparkMax(5, MotorType.kBrushless);
     m_intake = new TalonFX(7);
     m_feeder = new TalonSRX(6);
+    m_climber = new CANSparkMax(8,MotorType.kBrushless);
 
     m_topRight.setInverted(true);
     m_bottomRight.setInverted(true);
@@ -74,24 +77,38 @@ public class Robot extends TimedRobot
     m_bottomLeft.setInverted(false);
 
     CameraServer.startAutomaticCapture();
+
     mecanumDrive = new MecanumDrive(m_topLeft, m_bottomLeft, m_topRight, m_bottomRight);
+
+    tlM = m_topLeft.getEncoder();
+    blM = m_bottomLeft.getEncoder();
+    trM = m_topRight.getEncoder();
+    brM = m_bottomRight.getEncoder();
+    shooter = m_shooter.getEncoder();
+    
+    // setting the initial positions of the wheels
+    tlM.setPosition(0.0);
+    blM.setPosition(0.0);
+    trM.setPosition(0.0);
+    brM.setPosition(0.0);
+    shooter.setPosition(0.0);
   }
 
   @Override
   public void teleopInit()
   {
-
+    
   }
   
   @Override
   public void teleopPeriodic() 
-  {  
+  {
     //getting joystick values
     double joystickY = joystick.getY();
     double joystickX = joystick.getX();
     double joystickZ = joystick.getZ();
-    double xyspeed = 0.8;
-    double zspeed = 0.5;
+    double xyspeed = 0.4; //correct is 0.6
+    double zspeed = 0.3; //correct is 0.3
 
     //deadband values
     if (Math.abs(joystickY) < 0.3)
@@ -111,83 +128,47 @@ public class Robot extends TimedRobot
     mecanumDrive.driveCartesian(-joystickY*xyspeed, joystickX*xyspeed, joystickZ*zspeed);
 
     //shooter,feeder mechanism
-      //shooter
-    if (joystick.getRawButton(1))
-    {
-      m_shooter.set(1.0);
-    }
-    else
-    {
-      m_shooter.set(0.0);
-    }
-
-      //reverse all
-    if (mechanismJoyStick.getRawButton(2))
+    m_shooter.set(0.0);
+    m_feeder.set(TalonSRXControlMode.PercentOutput,0.0);
+      m_intake.set(TalonFXControlMode.PercentOutput,0.0);
+    if (mecJoystick.getRawButton(6))
     {
       m_shooter.set(-1.0);
-      m_intake.set(TalonFXControlMode.PercentOutput, -1.0);
-      m_feeder.set(TalonSRXControlMode.PercentOutput, -1.0);
-    }
-    else
-    {
-      m_shooter.set(0.0);
-      m_intake.set(TalonFXControlMode.PercentOutput, 0.0);
-      m_feeder.set(TalonSRXControlMode.PercentOutput, 0.0);
-    }
-      //intake,feeder
-    if (mechanismJoyStick.getRawButton(3))
-    {
-      m_intake.set(TalonFXControlMode.PercentOutput, -1.0);
-      m_feeder.set(TalonSRXControlMode.PercentOutput, -1.0);
-    }
-    else
-    {
-      m_intake.set(TalonFXControlMode.PercentOutput, 0.0);
-      m_feeder.set(TalonSRXControlMode.PercentOutput, 0.0);
-    }
-    //reverse intake,feeder
-    if (mechanismJoyStick.getRawButton(4))
-    {
-      m_intake.set(TalonFXControlMode.PercentOutput, 1.0);
-      m_feeder.set(TalonSRXControlMode.PercentOutput, 1.0);
-    }
-    else
-    {
-      m_intake.set(TalonFXControlMode.PercentOutput, 0.0);
-      m_feeder.set(TalonSRXControlMode.PercentOutput, 0.0);
-    }
-    //intake 
-    if (mechanismJoyStick.getRawButton(10))
-    {
-      m_intake.set(TalonFXControlMode.PercentOutput, -1.0);
-      m_feeder.set(TalonSRXControlMode.PercentOutput, -1.0);
-    }
-
-    if (mechanismJoyStick.getRawButton(7))
-    {
-      m_shooter.set(-0.8);
     }
     
-    //encoders
-    tlM = m_topLeft.getEncoder(Type.kHallSensor, 42);
-    blM = m_bottomLeft.getEncoder(Type.kHallSensor, 42);
-    trM = m_topRight.getEncoder(Type.kHallSensor, 42);
-    brM = m_bottomRight.getEncoder(Type.kHallSensor, 42);
-
-// wheels are 8 inches
-    tlM.setPosition(0.0);
-    blM.setPosition(0.0);
-    trM.setPosition(0.0);
-    brM.setPosition(0.0);
-
-
+    if(mecJoystick.getRawButton(8))
+    {
+      m_shooter.set(0.7);
+    }
+    if(mecJoystick.getRawButton(5))
+    {
+      m_feeder.set(TalonSRXControlMode.PercentOutput,-0.8);
+      m_intake.set(TalonFXControlMode.PercentOutput,-0.8);
+    }
+    if(mecJoystick.getRawButton(7))
+    {
+      m_feeder.set(TalonSRXControlMode.PercentOutput,1.0);
+      m_intake.set(TalonFXControlMode.PercentOutput,1.0);
+    }
+    m_climber.set(0.0);
     
-    SmartDashboard.putNumber("Top Left Motor Position", tlM.getPosition());
-    SmartDashboard.putNumber("Bottom Left Motor Position", blM.getPosition());
-    SmartDashboard.putNumber("Top Right Motor Position", trM.getPosition());
-    SmartDashboard.putNumber("Bottom Right Motor Position", brM.getPosition());
+    if( mecJoystick.getRawButton(4)){
+      m_climber.set(0.8);
+    }
 
+    if(mecJoystick.getRawButton(2)){
+      m_climber.set(-0.8);
+    }
+
+    //ramp up the shooter, exponential vs, slower rise to high speed-----find out about the pressure of the ball    
     
+    double cfShooter = -0.31789925694465637; //conversion factor to ft/s for shooter
+    //position
+    SmartDashboard.putNumber("TopLMotorPos", tlM.getPosition());
+    SmartDashboard.putNumber("BottomLMotorPos", blM.getPosition());
+    SmartDashboard.putNumber("TopRMotorPos", trM.getPosition());
+    SmartDashboard.putNumber("BottomRMotorPos", brM.getPosition());
+    SmartDashboard.putNumber("ShooterPos", shooter.getPosition()*cfShooter);
   }
 
   @Override
