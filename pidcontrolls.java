@@ -39,9 +39,6 @@ import com.ctre.phoenix.motorcontrol.TalonSRXControlMode;
 
 import edu.wpi.first.cameraserver.CameraServer;
 
-// PID Controller
-import edu.wpi.first.math.controller.*;
-
 public class Robot extends TimedRobot 
 {
   private MecanumDrive mecanumDrive;
@@ -62,10 +59,7 @@ public class Robot extends TimedRobot
   RelativeEncoder brM;
   RelativeEncoder shooter; 
   RelativeEncoder climber;  
-
-  double KP = 1.0;
-  double KI = 0.0;
-  double KD = 0.0;
+  double ErrorLast;
 
   @Override
   public void robotInit() 
@@ -102,11 +96,10 @@ public class Robot extends TimedRobot
     brM.setPosition(0.0);
     shooter.setPosition(0.0);
     climber.setPosition(0.0);
- 
-  //PIDController pid = new PIDController(KP, KI, KD);
   }
 
   //pneumatics (test)
+  //private final Compressor comp = new comppressor();
   //private final DoubleSolenoid solenoid = new Doublesoleniod(0,1);
 
   @Override
@@ -166,43 +159,68 @@ public class Robot extends TimedRobot
       m_intake.set(TalonFXControlMode.PercentOutput,1.0);
     }
     // this is the climber code
-    
-    m_climber.set(0.0);
+    climberController();
+    // m_climber.set(0.0);
 
-    if( mecJoystick.getRawButton(4)){
-      m_climber.set(0.8);
-    }
+    // if( mecJoystick.getRawButton(4)){
+    //   m_climber.set(0.8);
+    // }
 
-    if(mecJoystick.getRawButton(2)){
-      m_climber.set(-0.8);
-    }
+    // if(mecJoystick.getRawButton(2)){
+    //   m_climber.set(-0.8);
+    // }
 
     //ramp up the shooter, exponential vs, slower rise to high speed-----find out about the pressure of the ball    
     
     double cfShooter = -0.31789925694465637; //conversion factor to ft/s for shooter
+    double cfClimber_counts2Length = 117.69/61.875; 
     //position
     SmartDashboard.putNumber("TopLMotorPos", tlM.getPosition());
     SmartDashboard.putNumber("BottomLMotorPos", blM.getPosition());
     SmartDashboard.putNumber("TopRMotorPos", trM.getPosition());
     SmartDashboard.putNumber("BottomRMotorPos", brM.getPosition());
     SmartDashboard.putNumber("ShooterPos", shooter.getPosition()*cfShooter);
-    SmartDashboard.putNumber("Climber", climber.getPosition());
+    SmartDashboard.putNumber("Climber", climber.getPosition()*cfClimber_counts2Length);
+
+    // System.out.println(climber.getPosition()*cfClimber_counts2Length);
+
     //pneumatics
-    /*if (joystick.getrawbutton(5)) {
-      solenoid.set(DoubleSolenoid.value.kforward);
+    // if (joystick.getrawbutton(5)) {
+    //   solenoid.set(DoubleSolenoid.value.kforward);
       
-    } else if (joystick.getrawbutton(6)) {
-      solenoid.set(DoubleSolenoid.value.kreverse);
-    }
-*/
+    // } else if (joystick.getrawbutton(6)) {
+    //   solenoid.set(DoubleSolenoid.value.kreverse);
+    // }
+
   }
 
   public void climberController()
   {
-    double ref = 0.0;
-    double u = KP*(ref-climber.getPosition());
+    double ref = 50.0;
+    double Kp = 0.10;
+    double Ki = 0.0;
+    double Kd = 0.0;
+    double cfClimber_counts2Length = 117.69/61.875; 
     
+    double dt = 0.005; // Need to verify
+    double Error = (ref-climber.getPosition());
+    double ErrorIntegral = Error*dt;
+    double ErrorDerivative = (Error - ErrorLast)/dt;
 
+    double u = Kp*(Error) + Ki*ErrorIntegral + Kd*ErrorDerivative;
+    
+    ErrorLast = climber.getPosition();
+
+    if(u>12.0)
+    {
+      u = 12.0;
+    }
+    else if(u<-12)
+    {
+      u = -12.0;
+    }
+    m_climber.set(u);
+    System.out.println(climber.getPosition());
   }
 
   @Override
